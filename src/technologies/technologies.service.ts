@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTechnologyDto } from './dto/create-technology.dto';
 import { UpdateTechnologyDto } from './dto/update-technology.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class TechnologiesService {
+  constructor(private readonly prisma: PrismaService) {}
+
   create(createTechnologyDto: CreateTechnologyDto) {
-    return 'This action adds a new technology';
+    return this.prisma.technology.create({
+      data: createTechnologyDto,
+    });
   }
 
   findAll() {
