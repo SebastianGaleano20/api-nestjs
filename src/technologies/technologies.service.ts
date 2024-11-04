@@ -24,15 +24,17 @@ export class TechnologiesService {
     //En caso de que no exista, creamos la nueva tecnología
     try {
       const technology = await this.prisma.technology.create({
-        data: technologyData,
-        //Los proyectos son una tabla aparte por lo tanto se conecta de la siguiente manera:
-        projects: {
-          connect: projects?.map((project) => ({ name: project })),
+        data: {
+          ...technologyData,
+          //Los proyectos son una tabla aparte por lo tanto se conecta de la siguiente manera:
+          projects: {
+            connect: projects?.map((project) => ({ name: project })),
+          },
         },
       });
       return technology;
     } catch (e) {
-      throw new HttpException('Error creating technology', 500);
+      throw new HttpException(`${e} Error creating technology`, 500);
     }
   }
 
