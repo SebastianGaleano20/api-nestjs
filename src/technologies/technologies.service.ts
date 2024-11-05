@@ -202,7 +202,41 @@ export class TechnologiesService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} technology`;
+  async remove(id: number): Promise<Technology> {
+    // Verificar si existe la tecnología
+    const existing = await this.prisma.technology.findUnique({
+      //Filtramos por id
+      where: { id },
+      include: {
+        questions: true,
+        resources: true,
+        projects: true,
+      },
+    });
+    //Si no existe lanzamos error 404
+    if (!existing) {
+      throw new HttpException(`Technology with ID ${id} not found`, 404);
+    }
+
+    // Verificar si tiene relaciones y eliminarlas si es necesario
+    if (existing.questions.length > 0 || existing.resources.length > 0) {
+      // Eliminar primero las relaciones
+      await this.prisma.$transaction([
+        this.prisma.question.deleteMany({
+          where: { technologyId: id },
+        }),
+        this.prisma.resource.deleteMany({
+          where: { technologyId: id },
+        }),
+      ]);
+    }
+
+    // Eliminar la tecnología
+    return await this.prisma.technology.delete({
+      where: { id },
+      include: {
+        projects: true,
+      },
+    });
   }
 }
