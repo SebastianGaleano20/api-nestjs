@@ -65,8 +65,13 @@ export class ProjectsService {
       }
     });
   }
-}
 
-remove(id: number, updateProjectDto: UpdateProjectDto) {
-
+  remove(id: number) {
+    return this.prisma.project.delete({
+      where: { id },
+      include: {
+        technologies: true,
+      },
+    });
+  }
 }
