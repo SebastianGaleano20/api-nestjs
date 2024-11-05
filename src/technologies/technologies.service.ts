@@ -139,8 +139,67 @@ export class TechnologiesService {
     return technology;
   }
 
-  update(id: number, updateTechnologyDto: UpdateTechnologyDto) {
-    return `This action updates a #${id} technology`;
+  async update(
+    //Recibe el id por parametro y el DTO de actualización
+    id: number,
+    updateTechnologyDto: UpdateTechnologyDto,
+  ): Promise<Technology> {
+    //Desestructuramos los proyectos recibidos y los datos de las tecnologías
+    const { projects, ...technologyData } = updateTechnologyDto;
+
+    // Verificar si existe la tecnología
+    const existing = await this.prisma.technology.findUnique({
+      where: { id },
+    });
+    //Error por si no existe tecnología con id indicado por parametro
+    if (!existing) {
+      throw new HttpException(`Technology with ID ${id} not found`, 404);
+    }
+
+    // Si se está actualizando el nombre, verificar que no exista otro con ese nombre
+    if (technologyData.name) {
+      const nameExists = await this.prisma.technology.findFirst({
+        where: {
+          name: technologyData.name,
+          id: { not: id },
+        },
+      });
+      //Si el nombre existe, lanzamos el error
+      if (nameExists) {
+        throw new HttpException(
+          `Technology with name ${technologyData.name} already exists`,
+          500,
+        );
+      }
+    }
+
+    try {
+      //Actualizamos los datos
+      return await this.prisma.technology.update({
+        where: { id }, //Filtramos por id
+        data: {
+          ...technologyData, //Enviamos la data desestructurada
+          projects: projects //Enviamos los proyectos
+            ? {
+                set: [], // Desvincula todos los proyectos existentes
+                connect: projects.map((name) => ({ name })), // Conecta los nuevos proyectos
+              }
+            : undefined,
+        },
+        include: {
+          questions: true,
+          resources: true,
+          projects: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new HttpException('One or more projects not found', 404);
+        }
+      }
+      throw error;
+    }
   }
 
   remove(id: number) {
