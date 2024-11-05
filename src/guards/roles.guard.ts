@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role, ROLES_KEY } from '@/decorators/roles.decorator';
+import { Role, ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 // Guard para rutas de usuario

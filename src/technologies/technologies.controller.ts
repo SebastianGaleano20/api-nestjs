@@ -7,11 +7,17 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { TechnologiesService } from './technologies.service';
 import { CreateTechnologyDto } from './dto/create-technology.dto';
 import { UpdateTechnologyDto } from './dto/update-technology.dto';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
+//Utilizamos las guards creadas
+@UseGuards(AuthGuard, RolesGuard)
 @Controller('technologies')
 export class TechnologiesController {
   constructor(private readonly technologiesService: TechnologiesService) {}
@@ -22,6 +28,8 @@ export class TechnologiesController {
   }
 
   @Get()
+  //Solo ADMIN es admitido para utilizar este endpoint
+  @Roles(Role.ADMIN)
   findAll(
     @Query('tag') tag?: string,
     @Query('search') search?: string,
