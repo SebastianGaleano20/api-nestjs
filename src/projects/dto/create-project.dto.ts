@@ -11,5 +11,5 @@ export class CreateProjectDto {
 
     @IsArray()
     @IsString()
-    technologies: string[]
+    technologies?: string[]
 }
