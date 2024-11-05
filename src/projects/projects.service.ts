@@ -9,7 +9,7 @@ export class ProjectsService {
   constructor(private readonly prisma: PrismaService) { }
   /* Metodo que crea un nuevo proyecto recibiendo por parametro la data
      La estructura de la data debe respetar el CreateProjectDto */
-  create(createProjectDto: CreateProjectDto) { 
+  create(createProjectDto: CreateProjectDto) {
     //Desestructuramos technologías y la data de los proyectos para trabajarlas por separado
     const { technologies, ...projectData } = createProjectDto;
     //Vamos a retornar como valor el resultado del metodo create de prisma:
@@ -30,18 +30,43 @@ export class ProjectsService {
   }
 
   findAll() {
-    return `This action returns all projects`;
+    //Retornamos todos los proyectos con las technologías incluidas
+    return this.prisma.project.findMany({
+      include: {
+        technologies: true,
+      }
+    });
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} project`;
+    //Retornamos el proyecto encontrado por id recibido en los parametros
+    return this.prisma.project.findUnique({
+      where: { id },
+      include: {
+        technologies: true,
+      },
+    });
   }
 
   update(id: number, updateProjectDto: UpdateProjectDto) {
-    return `This action updates a #${id} project`;
-  }
+    const { technologies, ...projectData } = updateProjectDto;
 
-  remove(id: number) {
-    return `This action removes a #${id} project`;
+    return this.prisma.project.update({
+      where: { id },
+      data: {
+        ...projectData,
+        technologies: technologies ? {
+          set: [],
+          connect: technologies.map((name) => { name })
+        } : undefined,
+      },
+      include: {
+        technologies: true,
+      }
+    });
   }
+}
+
+remove(id: number, updateProjectDto: UpdateProjectDto) {
+
 }
