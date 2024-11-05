@@ -121,8 +121,22 @@ export class TechnologiesService {
     return { technologies, total };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} technology`;
+  async findOne(id: number): Promise<Technology> {
+    //Buscamos filtrando por id la tecnología
+    const technology = await this.prisma.technology.findUnique({
+      where: { id },
+      include: {
+        questions: true,
+        resources: true,
+        projects: true,
+      },
+    });
+    //Si no existe el id lanzamos el error 404
+    if (!technology) {
+      throw new HttpException(`Technology with ID ${id} not found`, 404);
+    }
+    //Si existe lo retornamos
+    return technology;
   }
 
   update(id: number, updateTechnologyDto: UpdateTechnologyDto) {
