@@ -2,6 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { CreateTechnologyDto } from './dto/create-technology.dto';
 import { UpdateTechnologyDto } from './dto/update-technology.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma, Technology } from '@prisma/client';
 
 @Injectable()
 export class TechnologiesService {
@@ -38,8 +39,86 @@ export class TechnologiesService {
     }
   }
 
-  findAll() {
-    return `This action returns all technologies`;
+  async findAll(params: {
+    //Metodo asincronico que recibe parametros opcionales
+    tag?: string;
+    search?: string;
+    project?: string;
+    //Paginación y ordenamiento
+    skip?: number;
+    take?: number;
+    orderBy?: 'name' | 'createdAt';
+    order?: 'asc' | 'desc';
+  }): Promise<{ technologies: Technology[]; total: number }> {
+    //Desestructuramos los parametros
+    const {
+      tag,
+      search,
+      project,
+      //Skip y take reciben un valor por defecto
+      skip = 0,
+      take = 10,
+      orderBy = 'createdAt',
+      order = 'desc',
+    } = params;
+
+    const where: Prisma.TechnologyWhereInput = {};
+    //Si hay tag, busca tecnologías que contengan ese tag
+    if (tag) {
+      where.tags = {
+        has: tag, //Indicamos que el tag que recibo por parametro es el que buscamos en la db
+      };
+    }
+    /* Filtra por busqueda
+    Si hay término de búsqueda, busca en:
+    Nombre (insensible a mayúsculas/minúsculas)
+    Descripción (insensible a mayúsculas/minúsculas)
+    Tags */
+    if (search) {
+      where.OR = [
+        //Puede contener nombre, description o tag
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { tags: { has: search } },
+      ];
+    }
+    //Si hay proyecto, busca tecnologías asociadas a ese proyecto
+    if (project) {
+      where.projects = {
+        some: {
+          name: project,
+        },
+      };
+    }
+    //Validamos campos de ordenamiento
+    const validOrderFields = ['name', 'createdAt'];
+    const validOrderTypes = ['asc', 'desc'];
+    //Establece valores seguros para ordenamiento
+    const sortField = validOrderFields.includes(orderBy)
+      ? orderBy
+      : 'createdAt';
+    const sortOrder = validOrderTypes.includes(order) ? order : 'desc';
+
+    const [technologies, total] = await Promise.all([
+      this.prisma.technology.findMany({
+        //Obtiene tecnologías filtradas con relaciones incluidas
+        where,
+        include: {
+          questions: true,
+          resources: true,
+          projects: true,
+        },
+        skip,
+        take,
+        orderBy: {
+          [sortField]: sortOrder,
+        },
+      }),
+      //Cuenta total de registros que cumplen los filtros
+      this.prisma.technology.count({ where }),
+    ]);
+    //Retorna las tecnologías encontradas y el total de registros
+    return { technologies, total };
   }
 
   findOne(id: number) {

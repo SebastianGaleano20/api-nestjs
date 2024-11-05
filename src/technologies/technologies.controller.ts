@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { TechnologiesService } from './technologies.service';
 import { CreateTechnologyDto } from './dto/create-technology.dto';
@@ -21,8 +22,20 @@ export class TechnologiesController {
   }
 
   @Get()
-  findAll() {
-    return this.technologiesService.findAll();
+  findAll(
+    @Query('tag') tag?: string,
+    @Query('search') search?: string,
+    @Query('project') project?: string,
+    @Query('orderBy') orderBy?: 'name' | 'createdAt',
+    @Query('order') order?: 'asc' | 'desc',
+  ) {
+    return this.technologiesService.findAll({
+      tag,
+      search,
+      project,
+      order,
+      orderBy,
+    });
   }
 
   @Get(':id')
