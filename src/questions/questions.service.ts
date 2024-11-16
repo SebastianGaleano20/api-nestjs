@@ -117,8 +117,36 @@ export class QuestionsService {
     });
   }
 
-  update(id: number, updateQuestionDto: UpdateQuestionDto) {
-    return `This action updates a #${id} question`;
+  async update(id: number, updateQuestionDto: UpdateQuestionDto): Promise<Question> {
+    // Verificar si existe la pregunta
+    const existingQuestion = await this.prisma.question.findUnique({
+      where: { id },
+    });
+
+    if (!existingQuestion) {
+      throw new NotFoundException(`Question with ID ${id} not found`);
+    }
+
+    // Si se está actualizando la tecnología, verificar que exista
+    if (updateQuestionDto.technologyId) {
+      const technology = await this.prisma.technology.findUnique({
+        where: { id: updateQuestionDto.technologyId },
+      });
+
+      if (!technology) {
+        throw new NotFoundException(
+          `Technology with ID ${updateQuestionDto.technologyId} not found`,
+        );
+      }
+    }
+
+    return this.prisma.question.update({
+      where: { id },
+      data: updateQuestionDto,
+      include: {
+        technology: true,
+      },
+    });
   }
 
   async remove(id: number): Promise<Question> {
