@@ -98,7 +98,24 @@ export class QuestionsService {
 
     return question;
   }
+  
+  async findByTechnology(technologyId: number): Promise<Question[]> {
+    // Verificar si existe la tecnología
+    const technology = await this.prisma.technology.findUnique({
+      where: { id: technologyId },
+    });
 
+    if (!technology) {
+      throw new NotFoundException(`Technology with ID ${technologyId} not found`);
+    }
+
+    return this.prisma.question.findMany({
+      where: { technologyId },
+      include: {
+        technology: true,
+      },
+    });
+  }
 
   update(id: number, updateQuestionDto: UpdateQuestionDto) {
     return `This action updates a #${id} question`;
@@ -122,4 +139,4 @@ export class QuestionsService {
     });
   }
 }
-}
+
