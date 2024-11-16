@@ -84,9 +84,21 @@ export class QuestionsService {
     return { questions, total };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} question`;
+  async findOne(id: number): Promise<Question> {
+    const question = await this.prisma.question.findUnique({
+      where: { id },
+      include: {
+        technology: true,
+      },
+    });
+
+    if (!question) {
+      throw new NotFoundException(`Question with ID ${id} not found`);
+    }
+
+    return question;
   }
+
 
   update(id: number, updateQuestionDto: UpdateQuestionDto) {
     return `This action updates a #${id} question`;
