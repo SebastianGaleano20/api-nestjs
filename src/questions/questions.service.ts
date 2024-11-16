@@ -104,7 +104,22 @@ export class QuestionsService {
     return `This action updates a #${id} question`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} question`;
+  async remove(id: number): Promise<Question> {
+    // Verificar si existe la pregunta
+    const question = await this.prisma.question.findUnique({
+      where: { id },
+    });
+
+    if (!question) {
+      throw new NotFoundException(`Question with ID ${id} not found`);
+    }
+
+    return this.prisma.question.delete({
+      where: { id },
+      include: {
+        technology: true,
+      },
+    });
   }
+}
 }
