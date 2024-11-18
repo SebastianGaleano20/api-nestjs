@@ -59,10 +59,10 @@ export class QuestionsController {
   @ApiOperation({ summary: 'Get questions by technology ID' }) // Descripcíon de la funcionalidad de este endpoint
   @ApiResponse({ status: 200, description: 'Return questions for the specified technology.' }) // Response
   // Indicamos que el parametro technologyId es nuestro filtro. 
-  findByTechnology(@Param('technologyId', ParseIntPipe) technologyId: number) { 
+  findByTechnology(@Param('technologyId', ParseIntPipe) technologyId: number) {
     return this.questionsService.findByTechnology(technologyId);
   }
-  
+
 
   @Get(':id') // Buscador por id de pregunta
   @Roles(Role.USER, Role.ADMIN) // Roles autorizados
@@ -74,8 +74,14 @@ export class QuestionsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuestionDto: UpdateQuestionDto) {
-    return this.questionsService.update(+id, updateQuestionDto);
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Update a question' })
+  @ApiResponse({ status: 200, description: 'The question has been successfully updated' })
+  @ApiResponse({ status: 400, description: 'Question not found.' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateQuestionDto: UpdateQuestionDto) {
+    return this.questionsService.update(id, updateQuestionDto);
   }
 
   @Delete(':id')
