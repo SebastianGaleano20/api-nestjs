@@ -1,10 +1,10 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
   Delete,
   Query,
   UseGuards,
@@ -26,13 +26,13 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 @ApiBearerAuth() //Autenticacíon e tokens
 export class QuestionsController {
   // Instancia de questions service para utilizar sus métodos.
-  constructor(private readonly questionsService: QuestionsService) {}
+  constructor(private readonly questionsService: QuestionsService) { }
 
   @Post()
   @Roles(Role.ADMIN)
-  @ApiOperation({summary: 'Create a new question'})
-  @ApiResponse({status: 201, description: 'The question has been successfully created.'})
-  @ApiResponse({status: 400, description: 'Invalid input data'})
+  @ApiOperation({ summary: 'Create a new question' })
+  @ApiResponse({ status: 201, description: 'The question has been successfully created.' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
   create(@Body() createQuestionDto: CreateQuestionDto) {
     return this.questionsService.create(createQuestionDto);
   }
@@ -41,8 +41,17 @@ export class QuestionsController {
   @Roles(Role.USER, Role.ADMIN) // Endpoint autorizado para usuarios y administradores
   @ApiOperation({ summary: 'Get all questions with optional filtering and pagination' }) //Descripcíon del endpoint para SwaggerUI
   @ApiResponse({ status: 200, description: 'Return all questions.' }) // Response del endpoint
-  findAll() {
-    return this.questionsService.findAll();
+  findAll(
+    // Define parametros de consulta 
+    @Query() findQuestionsDto: FindQuestionsDto, // Captura todos los parámetros de consulta y los mapea al DTO FindQuestionsDto
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number, // Define por defecto cuantos saltear, y con ParseIntPipe los convienrte en number
+    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number, // Define por defecto cuantos mostrar
+  ) {
+    return this.questionsService.findAll({
+      ...findQuestionsDto,  // Spread operator: expande todos los filtros del DTO
+      skip,                 // Añade el offset para paginación
+      take,                 // Añade el límite de registros
+    });
   }
 
   @Get(':id')
