@@ -63,10 +63,14 @@ export class QuestionsController {
     return this.questionsService.findByTechnology(technologyId);
   }
   
-  
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.questionsService.findOne(+id);
+
+  @Get(':id') // Buscador por id de pregunta
+  @Roles(Role.USER, Role.ADMIN) // Roles autorizados
+  @ApiOperation({ summary: 'Get a question by id' }) // Descripcíon de funcionalidad del endpoint
+  @ApiResponse({ status: 200, description: 'Return the question.' }) // Response en caso de exito
+  @ApiResponse({ status: 404, description: 'Question not found.' }) // Response en caso de error
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.questionsService.findOne(id);
   }
 
   @Patch(':id')
