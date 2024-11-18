@@ -54,6 +54,16 @@ export class QuestionsController {
     });
   }
 
+  @Get('by-technology/:technologyId') // Ruta para buscar preguntas por tecnologías
+  @Roles(Role.USER, Role.ADMIN) // Roles autorizados
+  @ApiOperation({ summary: 'Get questions by technology ID' }) // Descripcíon de la funcionalidad de este endpoint
+  @ApiResponse({ status: 200, description: 'Return questions for the specified technology.' }) // Response
+  // Indicamos que el parametro technologyId es nuestro filtro. 
+  findByTechnology(@Param('technologyId', ParseIntPipe) technologyId: number) { 
+    return this.questionsService.findByTechnology(technologyId);
+  }
+  
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.questionsService.findOne(+id);
