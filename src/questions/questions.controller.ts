@@ -85,7 +85,11 @@ export class QuestionsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.questionsService.remove(+id);
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Delete a question' })
+  @ApiResponse({ status: 200, description: 'The question has been successfully deleted.' })
+  @ApiResponse({ status: 400, description: 'Question not found.' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.questionsService.remove(id);
   }
 }
